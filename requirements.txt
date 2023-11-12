@@ -1,0 +1,6 @@
+# brightway2
+fastapi
+pinecone-client
+python-dotenv
+uvicorn[standard]
+xata
