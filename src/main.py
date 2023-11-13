@@ -51,41 +51,16 @@ async def root():
 async def query_main(
     request: QueryRequest = Body(...),
 ):
-    # try:
-    results = await datastore.query(
-        request.queries,
-    )
-    query_response_neat = QueryResponseNeat(results=[])
-    for items in results:
-        query_result_neat = QueryResultNeat(results=[])
-        for result in items.results:
-            text = result.text
-            metadata = result.metadata
-            date = datetime.fromtimestamp(metadata.created_at)
-            formatted_date = date.strftime("%Y-%m")
-            source_entry = "[{}. {}. {}. {}.]({})".format(
-                metadata.source_id,
-                metadata.source,
-                metadata.author,
-                formatted_date,
-                metadata.url,
-            )
-            document_chunk_with_score_neat = DocumentChunkWithScoreNeat(
-                text=text,
-                source=source_entry,
-                score=result.score,
-            )
-            query_result_neat.results.append(document_chunk_with_score_neat)
-        query_response_neat.results.append(query_result_neat)
-    return query_response_neat
-    # except Exception as e:
-    #     logger.error(e)
-    #     raise HTTPException(status_code=500, detail="Internal Service Error")
+    try:
+        results = await datastore.query(
+            request.queries,
+        )
+        return QueryResponseNeat(results=results)
 
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(status_code=500, detail="Internal Service Error")
 
-# @app.on_shutdown
-# async def shutdown_event():
-#     # your shutdown code
 
 if __name__ == "__main__":
     import uvicorn

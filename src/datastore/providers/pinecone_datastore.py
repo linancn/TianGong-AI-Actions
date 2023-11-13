@@ -1,5 +1,6 @@
 import asyncio
 import os
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import pinecone
@@ -10,9 +11,9 @@ from src.datastore.datastore import DataStore
 from src.models.models import (
     DocumentChunk,
     DocumentChunkMetadata,
-    DocumentChunkWithScore,
+    DocumentChunkWithScoreNeat,
     DocumentMetadataFilter,
-    QueryResult,
+    QueryResultNeat,
     QueryWithEmbedding,
 )
 from src.services.date import to_unix_timestamp
@@ -110,13 +111,13 @@ class PineconeDataStore(DataStore):
     async def _query(
         self,
         queries: List[QueryWithEmbedding],
-    ) -> List[QueryResult]:
+    ) -> List[QueryResultNeat]:
         """
         Takes in a list of queries with embeddings and filters and returns a list of query results with matching document chunks and scores.
         """
 
-        # Define a helper coroutine that performs a single query and returns a QueryResult
-        async def _single_query(query: QueryWithEmbedding) -> QueryResult:
+        # Define a helper coroutine that performs a single query and returns a QueryResultNeat
+        async def _single_query(query: QueryWithEmbedding) -> QueryResultNeat:
             logger.debug(f"Query: {query.query}")
 
             # Convert the source to uppercase
@@ -139,37 +140,31 @@ class PineconeDataStore(DataStore):
                 logger.error(f"Error querying index: {e}")
                 raise e
 
-            query_results: List[DocumentChunkWithScore] = []
+            query_results: List[DocumentChunkWithScoreNeat] = []
             for result in query_response.matches:
                 score = result.score
                 metadata = result.metadata
-                # Remove document id and text from metadata and store it in a new variable
-                metadata_without_text = (
-                    {key: value for key, value in metadata.items() if key != "text"}
-                    if metadata
-                    else None
+
+                date = datetime.fromtimestamp(metadata["created_at"])
+                formatted_date = date.strftime("%Y-%m")
+                source_entry = "[{}. {}. {}. {}.]({})".format(
+                    metadata["source_id"],
+                    metadata["source"],
+                    metadata["author"],
+                    formatted_date,
+                    metadata["url"],
                 )
-
-                # If the source is not a valid Source in the Source enum, set it to None
-                # if (
-                #     metadata_without_text
-                #     and "source" in metadata_without_text
-                #     and metadata_without_text["source"] not in Source.__members__
-                # ):
-                #     metadata_without_text["source"] = None
-
-                # Create a document chunk with score object with the result data
-                result = DocumentChunkWithScore(
-                    id=result.id,
-                    score=score,
+                result = DocumentChunkWithScoreNeat(
                     text=metadata["text"] if metadata and "text" in metadata else None,
-                    metadata=metadata_without_text,
+                    score=score,
+                    source=source_entry,
                 )
+
                 query_results.append(result)
-            return QueryResult(query=query.query, results=query_results)
+            return QueryResultNeat(query=query.query, results=query_results)
 
         # Use asyncio.gather to run multiple _single_query coroutines concurrently and collect their results
-        results: List[QueryResult] = await asyncio.gather(
+        results: List[QueryResultNeat] = await asyncio.gather(
             *[_single_query(query) for query in queries]
         )
 
