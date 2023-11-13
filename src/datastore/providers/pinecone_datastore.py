@@ -37,7 +37,7 @@ class PineconeDataStore(DataStore):
         # Check if the index name is specified and exists in Pinecone
         if PINECONE_INDEX and PINECONE_INDEX not in pinecone.list_indexes():
             # Get all fields in the metadata object in a list
-            fields_to_index = list(DocumentChunkMetadata.__fields__.keys())
+            fields_to_index = list(DocumentChunkMetadata.model_fields.keys())
 
             # Create a new index with the specified name, dimension, and metadata configuration
             try:
@@ -232,7 +232,7 @@ class PineconeDataStore(DataStore):
         # For each field in the MetadataFilter, check if it has a value and add the corresponding pinecone filter expression
         # For start_date and end_date, uses the $gte and $lte operators respectively
         # For other fields, uses the $eq operator
-        for field, value in filter.dict().items():
+        for field, value in filter.model_dump().items():
             if value is not None:
                 if field == "start_date":
                     pinecone_filter["created_at"] = pinecone_filter.get(
@@ -259,7 +259,7 @@ class PineconeDataStore(DataStore):
 
         # For each field in the Metadata, check if it has a value and add it to the pinecone metadata dict
         # For fields that are dates, convert them to unix timestamps
-        for field, value in metadata.dict().items():
+        for field, value in metadata.model_dump().items():
             if value is not None:
                 if field in ["created_at"]:
                     pinecone_metadata[field] = to_unix_timestamp(value)

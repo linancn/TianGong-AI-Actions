@@ -1,9 +1,14 @@
-from typing import List
-import openai
 import os
-from loguru import logger
+from typing import List
 
-from tenacity import retry, wait_random_exponential, stop_after_attempt
+import openai
+from loguru import logger
+from openai import OpenAI
+from tenacity import retry, stop_after_attempt, wait_random_exponential
+
+client = OpenAI(
+    api_key=os.environ["OPENAI_API_KEY"],
+)
 
 
 @retry(wait=wait_random_exponential(min=1, max=20), stop=stop_after_attempt(3))
@@ -20,28 +25,27 @@ def get_embeddings(texts: List[str]) -> List[List[float]]:
     Raises:
         Exception: If the OpenAI API call fails.
     """
+
     # Call the OpenAI API to get the embeddings
     # NOTE: Azure Open AI requires deployment id
     deployment = os.environ.get("OPENAI_EMBEDDINGMODEL_DEPLOYMENTID")
 
     response = {}
     if deployment == None:
-        response = openai.Embedding.create(input=texts, model="text-embedding-ada-002")
+        response = client.embeddings.create(input=texts, model="text-embedding-ada-002")
     else:
-        response = openai.Embedding.create(input=texts, deployment_id=deployment)
+        response = client.embeddings.create(input=texts, deployment_id=deployment)
 
     # Extract the embedding data from the response
-    data = response["data"]  # type: ignore
+    data = response.data
 
     # Return the embeddings as a list of lists of floats
-    return [result["embedding"] for result in data]
+    return [result.embedding for result in data]
 
 
 @retry(wait=wait_random_exponential(min=1, max=20), stop=stop_after_attempt(3))
 def get_chat_completion(
-    messages,
-    model="gpt-4",  # use "gpt-4" for better results
-    deployment_id = None
+    messages, model="gpt-4", deployment_id=None  # use "gpt-4" for better results
 ):
     """
     Generate a chat completion using OpenAI's chat completion API.
@@ -66,10 +70,9 @@ def get_chat_completion(
         )
     else:
         response = openai.ChatCompletion.create(
-            deployment_id = deployment_id,
+            deployment_id=deployment_id,
             messages=messages,
         )
-
 
     choices = response["choices"]  # type: ignore
     completion = choices[0].message.content.strip()

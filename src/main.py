@@ -1,5 +1,6 @@
-import datetime
 import os
+from contextlib import asynccontextmanager
+from datetime import datetime
 
 from dotenv import load_dotenv
 from fastapi import Body, Depends, FastAPI, HTTPException
@@ -24,13 +25,16 @@ def validate_token(credentials: HTTPAuthorizationCredentials = Depends(bearer_sc
     return credentials
 
 
-async def startup():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     global datastore
     datastore = await get_datastore()
 
+    yield
+    datastore = None
 
-app = FastAPI(dependencies=[Depends(validate_token)])
-app.add_event_handler("startup", startup)
+
+app = FastAPI(dependencies=[Depends(validate_token)], lifespan=lifespan)
 
 app.mount("/.well-known", StaticFiles(directory=".well-known"), name="static")
 
@@ -47,36 +51,36 @@ async def root():
 async def query_main(
     request: QueryRequest = Body(...),
 ):
-    try:
-        results = await datastore.query(
-            request.queries,
-        )
-        query_response_neat = QueryResponseNeat(results=[])
-        for items in results:
-            query_result_neat = QueryResultNeat(results=[])
-            for result in items.results:
-                text = result.text
-                metadata = result.metadata
-                date = datetime.fromtimestamp(float(metadata.created_at))
-                formatted_date = date.strftime("%Y-%m")
-                source_entry = "[{}. {}. {}. {}.]({})".format(
-                    metadata.source_id,
-                    metadata.source,
-                    metadata.author,
-                    formatted_date,
-                    metadata.url,
-                )
-                document_chunk_with_score_neat = DocumentChunkWithScoreNeat(
-                    text=text,
-                    source=source_entry,
-                    score=result.score,
-                )
-                query_result_neat.results.append(document_chunk_with_score_neat)
-            query_response_neat.results.append(query_result_neat)
-        return query_response_neat
-    except Exception as e:
-        logger.error(e)
-        raise HTTPException(status_code=500, detail="Internal Service Error")
+    # try:
+    results = await datastore.query(
+        request.queries,
+    )
+    query_response_neat = QueryResponseNeat(results=[])
+    for items in results:
+        query_result_neat = QueryResultNeat(results=[])
+        for result in items.results:
+            text = result.text
+            metadata = result.metadata
+            date = datetime.fromtimestamp(metadata.created_at)
+            formatted_date = date.strftime("%Y-%m")
+            source_entry = "[{}. {}. {}. {}.]({})".format(
+                metadata.source_id,
+                metadata.source,
+                metadata.author,
+                formatted_date,
+                metadata.url,
+            )
+            document_chunk_with_score_neat = DocumentChunkWithScoreNeat(
+                text=text,
+                source=source_entry,
+                score=result.score,
+            )
+            query_result_neat.results.append(document_chunk_with_score_neat)
+        query_response_neat.results.append(query_result_neat)
+    return query_response_neat
+    # except Exception as e:
+    #     logger.error(e)
+    #     raise HTTPException(status_code=500, detail="Internal Service Error")
 
 
 # @app.on_shutdown

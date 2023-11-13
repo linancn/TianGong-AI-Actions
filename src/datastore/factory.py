@@ -10,6 +10,8 @@ async def get_datastore() -> DataStore:
     match datastore:
         case "pinecone":
             from src.datastore.providers.pinecone_datastore import PineconeDataStore
+
+            return PineconeDataStore()
         case _:
             raise ValueError(
                 f"Unsupported vector database: {datastore}. "
