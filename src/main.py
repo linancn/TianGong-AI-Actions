@@ -1,6 +1,5 @@
 import os
 from contextlib import asynccontextmanager
-from datetime import datetime
 
 from dotenv import load_dotenv
 from fastapi import Body, Depends, FastAPI, HTTPException
@@ -10,7 +9,6 @@ from loguru import logger
 
 from src.datastore.factory import get_datastore
 from src.models.api import QueryRequest, QueryResponseNeat
-from src.models.models import DocumentChunkWithScoreNeat, QueryResultNeat
 
 load_dotenv()
 

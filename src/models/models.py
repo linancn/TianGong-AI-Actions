@@ -76,4 +76,5 @@ class QueryResult(BaseModel):
 
 
 class QueryResultNeat(BaseModel):
+    query: str
     results: List[DocumentChunkWithScoreNeat]
