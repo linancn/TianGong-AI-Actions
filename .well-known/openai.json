@@ -1,0 +1,268 @@
+{
+    "openapi": "3.0.2",
+    "info": {
+        "title": "TianGong",
+        "description": "For querying academic papers and professional documents with optional filters.",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "https://plugin.tiangong.world"
+        }
+    ],
+    "paths": {
+        "/query": {
+            "post": {
+                "summary": "Query",
+                "description": "Accepts search query objects array each with query and optional filters, in format: {\"queries\": [{\"query\":\"string\",\"filter\":{\"source\":\"string\",\"start_date\":\"string\",\"end_date\":\"string\"},\"top_k\":16}]}. Break down complex questions into sub-questions. Split queries if ResponseTooLargeError occurs.",
+                "operationId": "query_query_post",
+                "x-openai-isConsequential": false,
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/QueryRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/QueryResponseNeat"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "DocumentChunkMetadata": {
+                "title": "DocumentChunkMetadata",
+                "type": "object",
+                "properties": {
+                    "source": {
+                        "title": "Source",
+                        "type": "string"
+                    },
+                    "source_id": {
+                        "title": "Source Id",
+                        "type": "string"
+                    },
+                    "url": {
+                        "title": "Url",
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "title": "Created At",
+                        "type": "string"
+                    },
+                    "author": {
+                        "title": "Author",
+                        "type": "string"
+                    },
+                    "document_id": {
+                        "title": "Document Id",
+                        "type": "string"
+                    }
+                }
+            },
+            "DocumentChunkWithScoreNeat": {
+                "title": "DocumentChunkWithScoreNeat",
+                "required": [
+                    "text",
+                    "source",
+                    "score"
+                ],
+                "type": "object",
+                "properties": {
+                    "text": {
+                        "title": "Text",
+                        "type": "string"
+                    },
+                    "source": {
+                        "title": "Source",
+                        "type": "string"
+                    },
+                    "score": {
+                        "title": "Score",
+                        "type": "number"
+                    }
+                }
+            },
+            "DocumentMetadataFilter": {
+                "title": "DocumentMetadataFilter",
+                "type": "object",
+                "properties": {
+                    "document_id": {
+                        "title": "Document Id",
+                        "type": "string"
+                    },
+                    "source": {
+                        "title": "Source",
+                        "type": "string"
+                    },
+                    "source_id": {
+                        "title": "Source Id",
+                        "type": "string"
+                    },
+                    "author": {
+                        "title": "Author",
+                        "type": "string"
+                    },
+                    "start_date": {
+                        "title": "Start Date",
+                        "type": "string"
+                    },
+                    "end_date": {
+                        "title": "End Date",
+                        "type": "string"
+                    }
+                }
+            },
+            "HTTPValidationError": {
+                "title": "HTTPValidationError",
+                "type": "object",
+                "properties": {
+                    "detail": {
+                        "title": "Detail",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ValidationError"
+                        }
+                    }
+                }
+            },
+            "Query": {
+                "title": "Query",
+                "required": [
+                    "query"
+                ],
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "title": "Query",
+                        "type": "string"
+                    },
+                    "filter": {
+                        "$ref": "#/components/schemas/DocumentMetadataFilter"
+                    },
+                    "top_k": {
+                        "title": "Top K",
+                        "type": "integer",
+                        "default": 16
+                    }
+                }
+            },
+            "QueryRequest": {
+                "title": "QueryRequest",
+                "required": [
+                    "queries"
+                ],
+                "type": "object",
+                "properties": {
+                    "queries": {
+                        "title": "Queries",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Query"
+                        }
+                    }
+                }
+            },
+            "QueryResponseNeat": {
+                "title": "QueryResponseNeat",
+                "required": [
+                    "results"
+                ],
+                "type": "object",
+                "properties": {
+                    "results": {
+                        "title": "Results",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/QueryResultNeat"
+                        }
+                    }
+                }
+            },
+            "QueryResultNeat": {
+                "title": "QueryResultNeat",
+                "required": [
+                    "results"
+                ],
+                "type": "object",
+                "properties": {
+                    "results": {
+                        "title": "Results",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/DocumentChunkWithScoreNeat"
+                        }
+                    }
+                }
+            },
+            "ValidationError": {
+                "title": "ValidationError",
+                "required": [
+                    "loc",
+                    "msg",
+                    "type"
+                ],
+                "type": "object",
+                "properties": {
+                    "loc": {
+                        "title": "Location",
+                        "type": "array",
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "integer"
+                                }
+                            ]
+                        }
+                    },
+                    "msg": {
+                        "title": "Message",
+                        "type": "string"
+                    },
+                    "type": {
+                        "title": "Error Type",
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "securitySchemes": {
+            "HTTPBearer": {
+                "type": "http",
+                "scheme": "bearer"
+            }
+        }
+    }
+}

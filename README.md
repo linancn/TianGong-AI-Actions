@@ -39,7 +39,6 @@ Install Cuda (optional):
 sudo apt install nvidia-cuda-toolkit
 ```
 
-
 ## Start
 
 ```bash

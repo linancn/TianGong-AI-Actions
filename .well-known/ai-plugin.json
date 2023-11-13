@@ -1,0 +1,25 @@
+{
+  "schema_version": "v1",
+  "name_for_model": "TianGong",
+  "name_for_human": "TianGong",
+  "description_for_model": "For searching through academic papers and professional documents to find relevant information.",
+  "description_for_human": "Search through academic papers and professional documents.",
+  "auth" : {
+    "type":"oauth",
+    "client_url":"https://plugin.tiangong.world/oauth/login",
+    "authorization_url":"https://plugin.tiangong.world/oauth/authorization",
+    "scope":"search:read",
+    "authorization_content_type":"application/x-www-form-urlencoded",
+    "verification_tokens":{
+			"openai":"Your OpenAI API key"
+    }
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://plugin.tiangong.world/.well-known/openapi.yaml",
+    "has_user_authentication": false
+  },
+  "logo_url": "https://plugin.tiangong.world/.well-known/logo.png",
+  "contact_email": "hello@contact.com", 
+  "legal_info_url": "http://plugin.tiangong.world/legal-info"
+}

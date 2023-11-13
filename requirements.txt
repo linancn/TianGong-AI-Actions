@@ -1,6 +1,10 @@
 # brightway2
+arrow
 fastapi
+openai
 pinecone-client
 python-dotenv
+tenacity
+tiktoken
 uvicorn[standard]
 xata
