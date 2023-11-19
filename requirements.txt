@@ -1,6 +1,7 @@
 # brightway2
 arrow
 fastapi
+instructor
 openai
 pinecone-client
 python-dotenv
