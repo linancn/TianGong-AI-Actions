@@ -3,6 +3,7 @@ arrow
 fastapi
 instructor
 openai
+oss2
 pinecone-client
 python-dotenv
 tenacity
