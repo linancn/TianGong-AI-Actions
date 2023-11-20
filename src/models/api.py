@@ -1,3 +1,8 @@
+from typing import List, Optional
+
+from pydantic import BaseModel
+
+from src.models.lca_models import Source
 from src.models.models import (
     Document,
     DocumentMetadataFilter,
@@ -5,8 +10,6 @@ from src.models.models import (
     QueryResult,
     QueryResultNeat,
 )
-from pydantic import BaseModel
-from typing import List, Optional
 
 
 class UpsertRequest(BaseModel):
@@ -37,3 +40,11 @@ class DeleteRequest(BaseModel):
 
 class DeleteResponse(BaseModel):
     success: bool
+
+
+class QueryLCASourceRequest(BaseModel):
+    queries: str
+
+
+class QueryLCASourceResponse(BaseModel):
+    sources: List[Source]

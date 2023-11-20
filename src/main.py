@@ -8,7 +8,13 @@ from fastapi.staticfiles import StaticFiles
 from loguru import logger
 
 from src.datastore.factory import get_datastore
-from src.models.api import QueryRequest, QueryResponseNeat
+from src.lcadata.lca_query import query_lca_source
+from src.models.api import (
+    QueryLCASourceRequest,
+    QueryLCASourceResponse,
+    QueryRequest,
+    QueryResponseNeat,
+)
 
 load_dotenv()
 
@@ -54,6 +60,22 @@ async def query_main(
             request.queries,
         )
         return QueryResponseNeat(results=results)
+
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(status_code=500, detail="Internal Service Error")
+
+
+@app.post(
+    "/lca-source-query",
+    response_model=QueryLCASourceResponse,
+)
+async def query_source(
+    request: QueryLCASourceRequest = Body(...),
+):
+    try:
+        results = await query_lca_source(request.queries)
+        return QueryLCASourceResponse(sources=results)
 
     except Exception as e:
         logger.error(e)
