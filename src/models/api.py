@@ -43,6 +43,9 @@ class DeleteResponse(BaseModel):
 
 
 class QueryLCASourceRequest(BaseModel):
+    """
+    Send a query to the LCA source database.
+    """
     queries: str
 
 
