@@ -32,6 +32,15 @@ async def query_lca_source(query: str):
         for field in ["classification", "data_set_format", "short_name"]:
             if field in record and isinstance(record[field], str):
                 record[field] = json.loads(record[field])
+        for field in ["link_to_digital_file"]:
+            if field in record:
+                file_keys = json.loads(record["link_to_digital_file"])
+                link_to_digital_file = []
+                for file_key in file_keys:
+                    link_to_digital_file.append(
+                        oss_bucket.sign_url("GET", "external_docs/" + file_key, 120)
+                    )
+                record["link_to_digital_file"] = link_to_digital_file
         lca_source_result = Source(**record)
         lca_source_results.append(lca_source_result)
 

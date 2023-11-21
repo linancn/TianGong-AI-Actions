@@ -16,7 +16,6 @@
                 "summary": "Query",
                 "description": "Accepts search query objects array each with query and optional filters, in format: {\"queries\": [{\"query\":\"string\",\"filter\":{\"source\":\"string\",\"start_date\":\"string\",\"end_date\":\"string\"},\"top_k\":16}]}. Break down complex questions into sub-questions. Split queries if ResponseTooLargeError occurs.",
                 "operationId": "query_main_query_post",
-                "x-openai-isConsequential": false,
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -55,157 +54,474 @@
                     }
                 ]
             }
+        },
+        "/lca-source-query": {
+            "post": {
+                "summary": "Query Source",
+                "description": "Accepts query for searching LCA sources",
+                "operationId": "query_source_lca_source_query_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/QueryLCASourceRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/QueryLCASourceResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
         }
     },
     "components": {
         "schemas": {
             "DocumentChunkWithScoreNeat": {
-                "title": "DocumentChunkWithScoreNeat",
+                "properties": {
+                    "text": {
+                        "type": "string",
+                        "title": "Text"
+                    },
+                    "source": {
+                        "type": "string",
+                        "title": "Source"
+                    },
+                    "score": {
+                        "type": "number",
+                        "title": "Score"
+                    }
+                },
+                "type": "object",
                 "required": [
                     "text",
                     "source",
                     "score"
                 ],
-                "type": "object",
-                "properties": {
-                    "text": {
-                        "title": "Text",
-                        "type": "string"
-                    },
-                    "source": {
-                        "title": "Source",
-                        "type": "string"
-                    },
-                    "score": {
-                        "title": "Score",
-                        "type": "number"
-                    }
-                }
+                "title": "DocumentChunkWithScoreNeat"
             },
             "DocumentMetadataFilter": {
-                "title": "DocumentMetadataFilter",
-                "type": "object",
                 "properties": {
                     "document_id": {
-                        "title": "Document Id",
-                        "type": "string"
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Document Id"
                     },
                     "source": {
-                        "title": "Source",
-                        "type": "string"
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Source"
                     },
                     "source_id": {
-                        "title": "Source Id",
-                        "type": "string"
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Source Id"
                     },
                     "author": {
-                        "title": "Author",
-                        "type": "string"
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Author"
                     },
                     "start_date": {
-                        "title": "Start Date",
-                        "type": "string"
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Start Date"
                     },
                     "end_date": {
-                        "title": "End Date",
-                        "type": "string"
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "End Date"
                     }
-                }
+                },
+                "type": "object",
+                "title": "DocumentMetadataFilter"
             },
             "HTTPValidationError": {
-                "title": "HTTPValidationError",
-                "type": "object",
                 "properties": {
                     "detail": {
-                        "title": "Detail",
-                        "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/ValidationError"
-                        }
+                        },
+                        "type": "array",
+                        "title": "Detail"
                     }
-                }
+                },
+                "type": "object",
+                "title": "HTTPValidationError"
             },
             "Query": {
-                "title": "Query",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "title": "Query"
+                    },
+                    "filter": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/DocumentMetadataFilter"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "top_k": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Top K",
+                        "default": 16
+                    }
+                },
+                "type": "object",
                 "required": [
                     "query"
                 ],
-                "type": "object",
-                "properties": {
-                    "query": {
-                        "title": "Query",
-                        "type": "string"
-                    },
-                    "filter": {
-                        "$ref": "#/components/schemas/DocumentMetadataFilter"
-                    },
-                    "top_k": {
-                        "title": "Top K",
-                        "type": "integer",
-                        "default": 16
-                    }
-                }
+                "title": "Query"
             },
-            "QueryRequest": {
-                "title": "QueryRequest",
+            "QueryLCASourceRequest": {
+                "properties": {
+                    "queries": {
+                        "type": "string",
+                        "title": "Queries"
+                    }
+                },
+                "type": "object",
                 "required": [
                     "queries"
                 ],
+                "title": "QueryLCASourceRequest",
+                "description": "Send a query to the LCA source database."
+            },
+            "QueryLCASourceResponse": {
+                "properties": {
+                    "sources": {
+                        "items": {
+                            "$ref": "#/components/schemas/Source"
+                        },
+                        "type": "array",
+                        "title": "Sources"
+                    }
+                },
                 "type": "object",
+                "required": [
+                    "sources"
+                ],
+                "title": "QueryLCASourceResponse"
+            },
+            "QueryRequest": {
                 "properties": {
                     "queries": {
-                        "title": "Queries",
-                        "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/Query"
-                        }
+                        },
+                        "type": "array",
+                        "title": "Queries"
                     }
-                }
+                },
+                "type": "object",
+                "required": [
+                    "queries"
+                ],
+                "title": "QueryRequest"
             },
             "QueryResponseNeat": {
-                "title": "QueryResponseNeat",
-                "required": [
-                    "results"
-                ],
-                "type": "object",
                 "properties": {
                     "results": {
-                        "title": "Results",
-                        "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/QueryResultNeat"
-                        }
+                        },
+                        "type": "array",
+                        "title": "Results"
                     }
-                }
-            },
-            "QueryResultNeat": {
-                "title": "QueryResultNeat",
+                },
+                "type": "object",
                 "required": [
                     "results"
                 ],
-                "type": "object",
+                "title": "QueryResponseNeat"
+            },
+            "QueryResultNeat": {
                 "properties": {
+                    "query": {
+                        "type": "string",
+                        "title": "Query"
+                    },
                     "results": {
-                        "title": "Results",
-                        "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/DocumentChunkWithScoreNeat"
-                        }
+                        },
+                        "type": "array",
+                        "title": "Results"
                     }
-                }
+                },
+                "type": "object",
+                "required": [
+                    "query",
+                    "results"
+                ],
+                "title": "QueryResultNeat"
+            },
+            "Source": {
+                "properties": {
+                    "belongs_to": {
+                        "anyOf": [
+                            {
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Belongs To"
+                    },
+                    "classification": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "type": "object"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Classification"
+                    },
+                    "data_set_format": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "type": "object"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Data Set Format"
+                    },
+                    "data_set_version": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Data Set Version"
+                    },
+                    "link_to_digital_file": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "type": "string"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Link To Digital File"
+                    },
+                    "logo_of_organisation_or_source": {
+                        "anyOf": [
+                            {
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Logo Of Organisation Or Source"
+                    },
+                    "owner_of_data_set": {
+                        "anyOf": [
+                            {
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Owner Of Data Set"
+                    },
+                    "permanent_data_set_uri": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Permanent Data Set Uri"
+                    },
+                    "preceding_data_set_version": {
+                        "anyOf": [
+                            {
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Preceding Data Set Version"
+                    },
+                    "pulication_type": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Pulication Type"
+                    },
+                    "schema_version": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Schema Version"
+                    },
+                    "short_name": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "type": "object"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Short Name"
+                    },
+                    "source_citation": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Source Citation"
+                    },
+                    "source_description_comment": {
+                        "anyOf": [
+                            {
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Source Description Comment"
+                    },
+                    "time_stamp_last_saved": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Time Stamp Last Saved"
+                    },
+                    "uuid": {
+                        "type": "string",
+                        "title": "Uuid"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "uuid"
+                ],
+                "title": "Source"
             },
             "ValidationError": {
-                "title": "ValidationError",
-                "required": [
-                    "loc",
-                    "msg",
-                    "type"
-                ],
-                "type": "object",
                 "properties": {
                     "loc": {
-                        "title": "Location",
-                        "type": "array",
                         "items": {
                             "anyOf": [
                                 {
@@ -215,17 +531,26 @@
                                     "type": "integer"
                                 }
                             ]
-                        }
+                        },
+                        "type": "array",
+                        "title": "Location"
                     },
                     "msg": {
-                        "title": "Message",
-                        "type": "string"
+                        "type": "string",
+                        "title": "Message"
                     },
                     "type": {
-                        "title": "Error Type",
-                        "type": "string"
+                        "type": "string",
+                        "title": "Error Type"
                     }
-                }
+                },
+                "type": "object",
+                "required": [
+                    "loc",
+                    "msg",
+                    "type"
+                ],
+                "title": "ValidationError"
             }
         },
         "securitySchemes": {
