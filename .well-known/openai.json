@@ -13,9 +13,10 @@
     "paths": {
         "/query": {
             "post": {
-                "summary": "Query",
-                "description": "Accepts search query objects array each with query and optional filters, in format: {\"queries\": [{\"query\":\"string\",\"filter\":{\"source\":\"string\",\"start_date\":\"string\",\"end_date\":\"string\"},\"top_k\":16}]}. Break down complex questions into sub-questions. Split queries if ResponseTooLargeError occurs.",
+                "summary": "retrieve information from academic papers and professional documents",
+                "description": "generates query and optional filters, to retrieve knowledge, in format: {\"queries\": [{\"query\":\"string\",\"filter\":{\"source\":\"string\",\"start_date\":\"string\",\"end_date\":\"string\"},\"top_k\":16}]}. Break down complex questions into sub-questions. Split queries if ResponseTooLargeError occurs.",
                 "operationId": "query_main_query_post",
+                "x-openai-isConsequential": false,
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -60,6 +61,7 @@
                 "summary": "Query Source",
                 "description": "Accepts query for searching LCA sources",
                 "operationId": "query_source_lca_source_query_post",
+                "x-openai-isConsequential": false,
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -77,6 +79,51 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/QueryLCASourceResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
+        },
+        "/lca-process-query": {
+            "post": {
+                "summary": "Query LCA process database",
+                "description": "Accepts query for searching LCA processes, to recommend suitable LCA processes for a given query.",
+                "operationId": "query_process_lca_process_query_post",
+                "x-openai-isConsequential": false,
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LCAProcessQuery"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LCAProcessResponse"
                                 }
                             }
                         }
@@ -141,13 +188,12 @@
                     "source": {
                         "anyOf": [
                             {
-                                "type": "string"
+                                "$ref": "#/components/schemas/Sources"
                             },
                             {
                                 "type": "null"
                             }
-                        ],
-                        "title": "Source"
+                        ]
                     },
                     "source_id": {
                         "anyOf": [
@@ -209,6 +255,32 @@
                 },
                 "type": "object",
                 "title": "HTTPValidationError"
+            },
+            "LCAProcessQuery": {
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "title": "Query"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "query"
+                ],
+                "title": "LCAProcessQuery"
+            },
+            "LCAProcessResponse": {
+                "properties": {
+                    "results": {
+                        "type": "string",
+                        "title": "Results"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "results"
+                ],
+                "title": "LCAProcessResponse"
             },
             "Query": {
                 "properties": {
@@ -518,6 +590,94 @@
                     "uuid"
                 ],
                 "title": "Source"
+            },
+            "Sources": {
+                "type": "string",
+                "enum": [
+                    "AGRICULTURE, ECOSYSTEMS & ENVIRONMENT",
+                    "ANNUAL REVIEW OF ECOLOGY, EVOLUTION, AND SYSTEMATICS",
+                    "ANNUAL REVIEW OF ENVIRONMENT AND RESOURCES",
+                    "APPLIED CATALYSIS B: ENVIRONMENTAL",
+                    "BIOGEOSCIENCES",
+                    "BIOLOGICAL CONSERVATION",
+                    "BIOTECHNOLOGY ADVANCES",
+                    "CONSERVATION BIOLOGY",
+                    "CONSERVATION LETTERS",
+                    "CRITICAL REVIEWS IN ENVIRONMENTAL SCIENCE AND TECHNOLOGY",
+                    "DIVERSITY AND DISTRIBUTIONS",
+                    "ECOGRAPHY",
+                    "ECOLOGICAL APPLICATIONS",
+                    "ECOLOGICAL ECONOMICS",
+                    "ECOLOGICAL MONOGRAPHS",
+                    "ECOLOGY",
+                    "ECOLOGY LETTERS",
+                    "ECONOMIC SYSTEMS RESEARCH",
+                    "ECOSYSTEM HEALTH AND SUSTAINABILITY",
+                    "ECOSYSTEM SERVICES",
+                    "ECOSYSTEMS",
+                    "ENERGY & ENVIRONMENTAL SCIENCE",
+                    "ENVIRONMENT INTERNATIONAL",
+                    "ENVIRONMENTAL CHEMISTRY LETTERS",
+                    "ENVIRONMENTAL HEALTH PERSPECTIVES",
+                    "ENVIRONMENTAL POLLUTION",
+                    "ENVIRONMENTAL SCIENCE & TECHNOLOGY",
+                    "ENVIRONMENTAL SCIENCE & TECHNOLOGY LETTERS",
+                    "ENVIRONMENTAL SCIENCE AND ECOTECHNOLOGY",
+                    "ENVIRONMENTAL SCIENCE AND POLLUTION RESEARCH",
+                    "EVOLUTION",
+                    "FOREST ECOSYSTEMS",
+                    "FRONTIERS IN ECOLOGY AND THE ENVIRONMENT",
+                    "FRONTIERS OF ENVIRONMENTAL SCIENCE & ENGINEERING",
+                    "FUNCTIONAL ECOLOGY",
+                    "GLOBAL CHANGE BIOLOGY",
+                    "GLOBAL ECOLOGY AND BIOGEOGRAPHY",
+                    "GLOBAL ENVIRONMENTAL CHANGE",
+                    "INTERNATIONAL SOIL AND WATER CONSERVATION RESEARCH",
+                    "JOURNAL OF ANIMAL ECOLOGY",
+                    "JOURNAL OF APPLIED ECOLOGY",
+                    "JOURNAL OF BIOGEOGRAPHY",
+                    "JOURNAL OF CLEANER PRODUCTION",
+                    "JOURNAL OF ECOLOGY",
+                    "JOURNAL OF ENVIRONMENTAL INFORMATICS",
+                    "JOURNAL OF ENVIRONMENTAL MANAGEMENT",
+                    "JOURNAL OF HAZARDOUS MATERIALS",
+                    "JOURNAL OF INDUSTRIAL ECOLOGY",
+                    "JOURNAL OF PLANT ECOLOGY",
+                    "LANDSCAPE AND URBAN PLANNING",
+                    "LANDSCAPE ECOLOGY",
+                    "METHODS IN ECOLOGY AND EVOLUTION",
+                    "MICROBIOME",
+                    "MOLECULAR ECOLOGY",
+                    "NATURE",
+                    "NATURE CLIMATE CHANGE",
+                    "NATURE COMMUNICATIONS",
+                    "NATURE ECOLOGY & EVOLUTION",
+                    "NATURE ENERGY",
+                    "NATURE REVIEWS EARTH & ENVIRONMENT",
+                    "NATURE SUSTAINABILITY",
+                    "ONE EARTH",
+                    "PEOPLE AND NATURE",
+                    "PROCEEDINGS OF THE NATIONAL ACADEMY OF SCIENCES",
+                    "PROCEEDINGS OF THE ROYAL SOCIETY B: BIOLOGICAL SCIENCES",
+                    "RENEWABLE AND SUSTAINABLE ENERGY REVIEWS",
+                    "RESOURCES, CONSERVATION AND RECYCLING",
+                    "REVIEWS IN ENVIRONMENTAL SCIENCE AND BIO/TECHNOLOGY",
+                    "SCIENCE",
+                    "SCIENCE ADVANCES",
+                    "SCIENCE OF THE TOTAL ENVIRONMENT",
+                    "SCIENTIFIC DATA",
+                    "SUSTAINABLE CITIES AND SOCIETY",
+                    "SUSTAINABLE MATERIALS AND TECHNOLOGIES",
+                    "SUSTAINABLE PRODUCTION AND CONSUMPTION",
+                    "THE AMERICAN NATURALIST",
+                    "THE INTERNATIONAL JOURNAL OF LIFE CYCLE ASSESSMENT",
+                    "THE ISME JOURNAL",
+                    "THE LANCET PLANETARY HEALTH",
+                    "TRENDS IN ECOLOGY & EVOLUTION",
+                    "WASTE MANAGEMENT",
+                    "WATER RESEARCH"
+                ],
+                "title": "Sources"
             },
             "ValidationError": {
                 "properties": {

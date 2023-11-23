@@ -1,47 +1,31 @@
 import json
 import os
-
-import oss2
 import pandas as pd
-from dotenv import load_dotenv
-from openai import OpenAI
-from xata import XataClient
 
-from src.models.lca_models import Source
+from dotenv import load_dotenv
+from xata import XataClient
+from openai import OpenAI
 
 load_dotenv()
-
-oss_access_key_id = os.getenv("OSS_ACCESS_KEY_ID")
-oss_access_key_secret = os.getenv("OSS_ACCESS_KEY_SECRET")
-oss_endpoint = os.getenv("OSS_ENDPOINT")
-oss_bucket = os.getenv("OSS_BUCKET")
-
-oss_auth = oss2.Auth(oss_access_key_id, oss_access_key_secret)
-oss_bucket = oss2.Bucket(oss_auth, oss_endpoint, oss_bucket)
 
 xata_api_key = os.getenv("XATA_API_KEY")
 xata_database_url = os.getenv("XATA_DATABASE_URL")
 
 xata_client = XataClient(api_key=xata_api_key, db_url=xata_database_url)
+
 openai_client = OpenAI()
 
 
-async def query_lca_source(query: str):
-    results = xata_client.data().search_table("source", {"query": query})
-
-    lca_source_results = []
-
-    for record in results["records"]:
-        for field in ["classification", "data_set_format", "short_name"]:
-            if field in record and isinstance(record[field], str):
-                record[field] = json.loads(record[field])
-        lca_source_result = Source(**record)
-        lca_source_results.append(lca_source_result)
-
-    return lca_source_results
+def openai_embedding(input: str) -> [float]:
+    response = openai_client.embeddings.create(
+        model="text-embedding-ada-002",
+        input=input,
+    )
+    return response.data[0].embedding
 
 
-async def process_query_func_calling(query: str):
+def query_func_calling(query: str):
+    # Step 1: send the conversation and available functions to the model
     messages = [
         {
             "role": "user",
@@ -128,41 +112,60 @@ async def process_query_func_calling(query: str):
     return response_list
 
 
-async def process_search(lca_process_query: str):
-    query_list = await process_query_func_calling(lca_process_query)
+query = "中国北方小麦生产的单元过程数据及相关信息"
 
-    unique_results = {}
-    for query in query_list:
-        fuzzy_search_response = xata_client.data().search_table(
-            "process",
-            {
-                "query": query,
-                "target": ["name", "description"],
-                "fuzziness": 0,
-            },
-        )
-        fuzzy_search_results = fuzzy_search_response["records"][:10]
+query_list = query_func_calling(query)
 
-        # 遍历查询结果
-        for result in fuzzy_search_results:
-            uuid = result["uuid"]
-            score = result["xata"].get("score")
-            # 如果uuid不在字典中，则添加该记录
-            if uuid not in unique_results:
-                score = result.pop("xata", {}).get("score", None)
-                result["score"] = score
-                unique_results[uuid] = result
 
-    # 创建一个 DataFrame
-    df = pd.DataFrame.from_dict(unique_results, orient="index")
+unique_results = {}
+for query in query_list:
+    fuzzy_search_response = xata_client.data().search_table(
+        "process",
+        {
+            "query": query,
+            "target": ["name", "description"],
+            "fuzziness": 0,
+        },
+    )
+    fuzzy_search_results = fuzzy_search_response["records"][:10]
 
-    # 按照 'score' 排序，从高到低
-    df_sorted = df.sort_values(by='score', ascending=False)
-    df_subset = df_sorted[['name', 'description']]
+    # 遍历查询结果
+    for result in fuzzy_search_results:
+        uuid = result["uuid"]
+        score = result['xata'].get('score')
+        # 如果uuid不在字典中，则添加该记录
+        if uuid not in unique_results:
+            score = result.pop('xata', {}).get('score', None)
+            result['score'] = score
+            unique_results[uuid] = result
 
-    # 选择前 5条记录
-    df_top = df_subset.head(5)
+# 创建一个 DataFrame
+df = pd.DataFrame.from_dict(unique_results, orient='index')
 
-    df_top_json = df_top.to_json(orient='records')
+# 按照 'score' 排序，从高到低
+df_sorted = df.sort_values(by='score', ascending=False)
+df_subset = df_sorted[['name', 'description']]
 
-    return df_top_json
+# 选择前 5条记录
+df_top = df_subset.head(5)
+
+df_top_dict = df_top.to_dict(orient='records')
+
+print(df_top_dict['name'])
+            
+
+
+# query_embedding = openai_embedding(query)
+
+
+# vector_search_api_results = xata_client.data().vector_search("process", {
+#   "queryVector": query_embedding,  # array of floats
+#   "column": "description_embedding",     # column name,
+#   "similarityFunction": "cosineSimilarity", # space function
+#   "size": 10,                  # number of results to return
+# #   "filter": {},               # filter expression
+# })
+# vector_search_results = vector_search_api_results["records"]
+
+
+
