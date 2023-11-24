@@ -144,7 +144,7 @@ df = pd.DataFrame.from_dict(unique_results, orient='index')
 
 # 按照 'score' 排序，从高到低
 df_sorted = df.sort_values(by='score', ascending=False)
-df_subset = df_sorted[['name', 'description']]
+df_subset = df_sorted[['uuid', 'name', 'description']]
 
 # 选择前 5条记录
 df_top = df_subset.head(5)

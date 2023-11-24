@@ -140,7 +140,7 @@ class DocumentMetadataFilter(BaseModel):
     end_date: Optional[str] = None  # any date string format
 
     def __init__(self, **data):
-        if 'source' in data:
+        if 'source' in data and data['source'] is not None:
             source_value = data['source'].upper()
             for source in Sources:
                 if source.value.upper() == source_value:
